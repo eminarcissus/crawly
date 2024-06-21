@@ -12,7 +12,8 @@ defmodule Crawly.Request do
             prev_response: nil,
             options: [],
             middlewares: [],
-            retries: 0
+            retries: 0,
+            meta: %{}
 
   @type header() :: {key(), value()}
   @type url() :: binary()
@@ -21,6 +22,7 @@ defmodule Crawly.Request do
   @typep value :: binary()
 
   @type option :: {atom(), binary()}
+  @type meta :: map()
 
   @type t :: %__MODULE__{
           url: url(),
@@ -28,7 +30,8 @@ defmodule Crawly.Request do
           prev_response: %{},
           options: [option()],
           middlewares: [atom()],
-          retries: non_neg_integer()
+          retries: non_neg_integer(),
+          meta: %{}
         }
 
   ### ===========================================================================
@@ -37,13 +40,13 @@ defmodule Crawly.Request do
   @doc """
   Create new Crawly.Request from url, headers and options
   """
-  @spec new(url, headers, options) :: request
+  @spec new(url, headers, options,meta) :: request
         when url: binary(),
              headers: [term()],
              options: [term()],
              request: Crawly.Request.t()
 
-  def new(url, headers \\ [], options \\ []) do
+  def new(url, headers \\ [], options \\ [],meta \\ %{}) do
     # Define a list of middlewares which are used by default to process
     # incoming requests
     default_middlewares = [
@@ -56,26 +59,28 @@ defmodule Crawly.Request do
     middlewares =
       Application.get_env(:crawly, :middlewares, default_middlewares)
 
-    new(url, headers, options, middlewares)
+    new(url, headers, options, middlewares,meta)
   end
 
   @doc """
   Same as Crawly.Request.new/3 from but allows to specify middlewares as the 4th
   parameter.
   """
-  @spec new(url, headers, options, middlewares) :: request
+  @spec new(url, headers, options, middlewares,meta) :: request
         # TODO: improve typespec here
         when url: binary(),
              headers: [term()],
              options: [term()],
              middlewares: [term()],
+             meta: map(),
              request: Crawly.Request.t()
-  def new(url, headers, options, middlewares) do
+  def new(url, headers, options, middlewares,meta) do
     %Crawly.Request{
       url: url,
       headers: headers,
       options: options,
-      middlewares: middlewares
+      middlewares: middlewares,
+      meta: meta
     }
   end
 end
