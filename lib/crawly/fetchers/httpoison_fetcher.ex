@@ -8,6 +8,6 @@ defmodule Crawly.Fetchers.HTTPoisonFetcher do
 
   def fetch(request, _client_options) do
     # TODO: This should return Crawly.Response.
-    HTTPoison.get(request.url, request.headers, request.options)
+    HTTPoison.get(request.url, request.headers, [meta: request.meta] ++ request.options)
   end
 end
