@@ -54,10 +54,6 @@ defmodule Crawly.Worker do
               Logger.warning(
                 "Crawly worker could not process the request to #{inspect(request.url)} reason: #{inspect(reason)}"
               )
-              if Keyword.has_key?(spider_name.__info__(:functions), :handle_failure) do
-                {:ok,parsed_item} = spider_name.handle_failure(request,reason)
-                {:ok, :done} = process_parsed_item(parsed_item)
-              end
           end
 
           @default_backoff
@@ -203,6 +199,16 @@ defmodule Crawly.Worker do
 
       false ->
         Logger.error("Dropping request to #{request.url}, (max retries)")
+        if Keyword.has_key?(spider.__info__(:functions), :handle_failure) do
+          {:ok,%Crawly.ParsedItem{requests: reqs}} = spider.handle_failure(request,:max_retry)
+          Enum.each(
+            reqs,
+            fn request ->
+              #request = Map.put(request, :prev_response, response)
+              Crawly.RequestsStorage.store(spider, request)
+            end
+          )
+        end
         :ok
     end
   end
